@@ -44,34 +44,60 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
 
   // Get FID from Base App context automatically
   useEffect(() => {
-    if (context?.client) {
-      console.log('Base App context:', context.client);
+    console.log('=== FARCASTER CONTEXT DEBUG ===');
+    console.log('Full context object:', context);
+    
+    if (context) {
+      console.log('Context exists, checking client...');
+      console.log('Context keys:', Object.keys(context));
       
-      // Try to extract FID from context using type assertion
-      // The context should contain user information when accessed from Base App
-      const clientContext = context.client as Record<string, unknown>;
-      const contextKeys = Object.keys(clientContext);
-      console.log('Available context keys:', contextKeys);
-      
-      // Look for FID in various possible locations
-      if (typeof clientContext.fid === 'number') {
-        setUserFid(clientContext.fid);
-        console.log('FID found in context.client.fid:', clientContext.fid);
-      } else if (clientContext.user && typeof clientContext.user === 'object' && clientContext.user !== null && 'fid' in clientContext.user && typeof (clientContext.user as Record<string, unknown>).fid === 'number') {
-        setUserFid((clientContext.user as Record<string, unknown>).fid as number);
-        console.log('FID found in context.client.user.fid:', (clientContext.user as Record<string, unknown>).fid);
-      } else {
-        // Try to find FID in other context properties
+      if (context.client) {
+        console.log('Client exists, full client object:', context.client);
+        console.log('Client keys:', Object.keys(context.client));
+        
+        // Try to extract FID from context using type assertion
+        // The context should contain user information when accessed from Base App
+        const clientContext = context.client as Record<string, unknown>;
+        const contextKeys = Object.keys(clientContext);
+        console.log('Available client context keys:', contextKeys);
+        
+        // Log all client properties in detail
         for (const key of contextKeys) {
           const value = clientContext[key];
-          if (value && typeof value === 'object' && value !== null && 'fid' in value && typeof (value as Record<string, unknown>).fid === 'number') {
-            setUserFid((value as Record<string, unknown>).fid as number);
-            console.log(`FID found in context.client.${key}.fid:`, (value as Record<string, unknown>).fid);
-            break;
+          console.log(`Client.${key}:`, value);
+          console.log(`Client.${key} type:`, typeof value);
+          if (value && typeof value === 'object') {
+            console.log(`Client.${key} keys:`, Object.keys(value as Record<string, unknown>));
           }
         }
+        
+        // Look for FID in various possible locations
+        if (typeof clientContext.fid === 'number') {
+          setUserFid(clientContext.fid);
+          console.log('✅ FID found in context.client.fid:', clientContext.fid);
+        } else if (clientContext.user && typeof clientContext.user === 'object' && clientContext.user !== null && 'fid' in clientContext.user && typeof (clientContext.user as Record<string, unknown>).fid === 'number') {
+          setUserFid((clientContext.user as Record<string, unknown>).fid as number);
+          console.log('✅ FID found in context.client.user.fid:', (clientContext.user as Record<string, unknown>).fid);
+        } else {
+          console.log('🔍 No FID found in direct properties, searching nested objects...');
+          // Try to find FID in other context properties
+          for (const key of contextKeys) {
+            const value = clientContext[key];
+            if (value && typeof value === 'object' && value !== null && 'fid' in value && typeof (value as Record<string, unknown>).fid === 'number') {
+              setUserFid((value as Record<string, unknown>).fid as number);
+              console.log(`✅ FID found in context.client.${key}.fid:`, (value as Record<string, unknown>).fid);
+              break;
+            }
+          }
+        }
+      } else {
+        console.log('❌ No client in context');
       }
+    } else {
+      console.log('❌ No context available');
     }
+    
+    console.log('=== END FARCASTER CONTEXT DEBUG ===');
   }, [context]);
 
   // Auto-fetch casts when FID is available
@@ -152,6 +178,25 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
           <p className="text-[var(--app-foreground-muted)] mb-6">
             Attempting to get your FID from Base App context. If not available, you can try demo mode or enter a custom FID.
           </p>
+          
+          <div className="mb-4">
+            <Button
+              onClick={() => {
+                console.log('=== MANUAL CONTEXT CHECK ===');
+                console.log('Current context:', context);
+                if (context?.client) {
+                  console.log('Client object:', context.client);
+                  console.log('Client keys:', Object.keys(context.client));
+                }
+                console.log('=== END MANUAL CHECK ===');
+              }}
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs"
+            >
+              🔍 Debug: Check Context in Console
+            </Button>
+          </div>
           
           <div className="space-y-4">
             {!showManualInput ? (
