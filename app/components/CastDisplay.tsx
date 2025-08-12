@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMiniKit, useAuthenticate } from "@coinbase/onchainkit/minikit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 
@@ -33,6 +34,8 @@ interface CastDisplayProps {
 }
 
 export function CastDisplay({ className = "" }: CastDisplayProps) {
+  const { context } = useMiniKit();
+  const { signIn } = useAuthenticate();
   const [casts, setCasts] = useState<Cast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +43,37 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
   const [manualFid, setManualFid] = useState<string>("");
   const [showManualInput, setShowManualInput] = useState(false);
 
-  // In Base App, users can input their FID manually
-  // The context will be available when the app is properly integrated
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Try to get FID from Base App context first
+  useEffect(() => {
+    // Check if we have any user context from Base App
+    if (context?.client) {
+      console.log('Base App context:', context.client);
+      // The FID should be available after authentication
+    }
+  }, [context]);
+
+  // Handle Sign In with Farcaster
+  const handleSignIn = async () => {
+    setAuthLoading(true);
+    try {
+      // Try to authenticate with Farcaster
+      const result = await signIn();
+      
+      if (result) {
+        console.log('Authenticated:', result);
+        // After successful auth, the context should update with the user's FID
+        // For now, we'll use demo mode until we can get the actual FID
+        setUserFid(123456);
+      }
+    } catch (err) {
+      console.error('Authentication failed:', err);
+      setError('Authentication failed. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const fetchCasts = async (fid: number) => {
     setLoading(true);
@@ -109,25 +141,33 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
       <div className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] p-6 ${className}`}>
         <div className="text-center">
           <h3 className="text-lg font-medium text-[var(--app-foreground)] mb-4">
-            Enter Farcaster ID (FID)
+            Sign In with Farcaster
           </h3>
           <p className="text-[var(--app-foreground-muted)] mb-6">
-            Enter a FID to view their top 10 casts, or try demo mode
+            Sign in to view your top 10 casts, or try demo mode
           </p>
           
           <div className="space-y-4">
             {!showManualInput ? (
               <>
                 <Button
-                  onClick={handleDemoMode}
+                  onClick={handleSignIn}
                   variant="primary"
+                  className="w-full"
+                  disabled={authLoading}
+                >
+                  {authLoading ? 'Signing In...' : 'Sign In with Farcaster'}
+                </Button>
+                <Button
+                  onClick={handleDemoMode}
+                  variant="outline"
                   className="w-full"
                 >
                   Try Demo Mode (FID: 123456)
                 </Button>
                 <Button
                   onClick={() => setShowManualInput(true)}
-                  variant="outline"
+                  variant="ghost"
                   className="w-full"
                 >
                   Enter Custom FID
