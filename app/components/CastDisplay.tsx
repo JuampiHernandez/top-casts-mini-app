@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useState } from "react";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 
@@ -34,7 +33,6 @@ interface CastDisplayProps {
 }
 
 export function CastDisplay({ className = "" }: CastDisplayProps) {
-  const { address, isConnected } = useAccount();
   const [casts, setCasts] = useState<Cast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,18 +40,8 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
   const [manualFid, setManualFid] = useState<string>("");
   const [showManualInput, setShowManualInput] = useState(false);
 
-  // For demo purposes, we'll use a placeholder FID
-  // In a real app, you'd want to resolve the FID from the connected wallet
-  useEffect(() => {
-    // This is a placeholder - in production you'd resolve FID from wallet
-    if (isConnected && address) {
-      // For now, we'll use a demo FID. In production, you'd want to:
-      // 1. Use the Farcaster SDK to get the user's FID
-      // 2. Or have the user input their FID manually
-      // 3. Or resolve it through a different method
-      setUserFid(123456); // Demo FID - replace with actual logic
-    }
-  }, [isConnected, address]);
+  // In Base App, users can input their FID manually
+  // The context will be available when the app is properly integrated
 
   const fetchCasts = async (fid: number) => {
     setLoading(true);
@@ -115,21 +103,6 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
-
-  if (!isConnected) {
-    return (
-      <div className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] p-6 ${className}`}>
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-[var(--app-foreground)] mb-2">
-            Connect Your Wallet
-          </h3>
-          <p className="text-[var(--app-foreground-muted)] mb-4">
-            Connect your wallet to view your top Farcaster casts
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (!userFid) {
     return (
