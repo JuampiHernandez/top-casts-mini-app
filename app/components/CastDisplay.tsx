@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMiniKit, useViewProfile } from "@coinbase/onchainkit/minikit";
+import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 
@@ -35,7 +35,6 @@ interface CastDisplayProps {
 
 export function CastDisplay({ className = "" }: CastDisplayProps) {
   const { context } = useMiniKit();
-  const viewProfile = useViewProfile();
   const [casts, setCasts] = useState<Cast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,24 +49,24 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
       
       // Try to extract FID from context using type assertion
       // The context should contain user information when accessed from Base App
-      const clientContext = context.client as any;
+      const clientContext = context.client as Record<string, unknown>;
       const contextKeys = Object.keys(clientContext);
       console.log('Available context keys:', contextKeys);
       
       // Look for FID in various possible locations
-      if (clientContext.fid) {
+      if (typeof clientContext.fid === 'number') {
         setUserFid(clientContext.fid);
         console.log('FID found in context.client.fid:', clientContext.fid);
-      } else if (clientContext.user?.fid) {
-        setUserFid(clientContext.user.fid);
-        console.log('FID found in context.client.user.fid:', clientContext.user.fid);
+      } else if (clientContext.user && typeof clientContext.user === 'object' && clientContext.user !== null && 'fid' in clientContext.user && typeof (clientContext.user as Record<string, unknown>).fid === 'number') {
+        setUserFid((clientContext.user as Record<string, unknown>).fid as number);
+        console.log('FID found in context.client.user.fid:', (clientContext.user as Record<string, unknown>).fid);
       } else {
         // Try to find FID in other context properties
         for (const key of contextKeys) {
           const value = clientContext[key];
-          if (value && typeof value === 'object' && 'fid' in value) {
-            setUserFid(value.fid);
-            console.log(`FID found in context.client.${key}.fid:`, value.fid);
+          if (value && typeof value === 'object' && value !== null && 'fid' in value && typeof (value as Record<string, unknown>).fid === 'number') {
+            setUserFid((value as Record<string, unknown>).fid as number);
+            console.log(`FID found in context.client.${key}.fid:`, (value as Record<string, unknown>).fid);
             break;
           }
         }
