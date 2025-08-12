@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMiniKit, useAuthenticate } from "@coinbase/onchainkit/minikit";
+import { useMiniKit, useViewProfile } from "@coinbase/onchainkit/minikit";
 import Image from "next/image";
 import { Button } from "./DemoComponents";
 
@@ -35,7 +35,7 @@ interface CastDisplayProps {
 
 export function CastDisplay({ className = "" }: CastDisplayProps) {
   const { context } = useMiniKit();
-  const { signIn } = useAuthenticate();
+  const viewProfile = useViewProfile();
   const [casts, setCasts] = useState<Cast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,37 +43,44 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
   const [manualFid, setManualFid] = useState<string>("");
   const [showManualInput, setShowManualInput] = useState(false);
 
-  const [authLoading, setAuthLoading] = useState(false);
-
-  // Try to get FID from Base App context first
+  // Get FID from Base App context automatically
   useEffect(() => {
-    // Check if we have any user context from Base App
     if (context?.client) {
       console.log('Base App context:', context.client);
-      // The FID should be available after authentication
+      
+      // Try to extract FID from context using type assertion
+      // The context should contain user information when accessed from Base App
+      const clientContext = context.client as any;
+      const contextKeys = Object.keys(clientContext);
+      console.log('Available context keys:', contextKeys);
+      
+      // Look for FID in various possible locations
+      if (clientContext.fid) {
+        setUserFid(clientContext.fid);
+        console.log('FID found in context.client.fid:', clientContext.fid);
+      } else if (clientContext.user?.fid) {
+        setUserFid(clientContext.user.fid);
+        console.log('FID found in context.client.user.fid:', clientContext.user.fid);
+      } else {
+        // Try to find FID in other context properties
+        for (const key of contextKeys) {
+          const value = clientContext[key];
+          if (value && typeof value === 'object' && 'fid' in value) {
+            setUserFid(value.fid);
+            console.log(`FID found in context.client.${key}.fid:`, value.fid);
+            break;
+          }
+        }
+      }
     }
   }, [context]);
 
-  // Handle Sign In with Farcaster
-  const handleSignIn = async () => {
-    setAuthLoading(true);
-    try {
-      // Try to authenticate with Farcaster
-      const result = await signIn();
-      
-      if (result) {
-        console.log('Authenticated:', result);
-        // After successful auth, the context should update with the user's FID
-        // For now, we'll use demo mode until we can get the actual FID
-        setUserFid(123456);
-      }
-    } catch (err) {
-      console.error('Authentication failed:', err);
-      setError('Authentication failed. Please try again.');
-    } finally {
-      setAuthLoading(false);
+  // Auto-fetch casts when FID is available
+  useEffect(() => {
+    if (userFid) {
+      fetchCasts(userFid);
     }
-  };
+  }, [userFid]);
 
   const fetchCasts = async (fid: number) => {
     setLoading(true);
@@ -141,33 +148,25 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
       <div className={`bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] p-6 ${className}`}>
         <div className="text-center">
           <h3 className="text-lg font-medium text-[var(--app-foreground)] mb-4">
-            Sign In with Farcaster
+            Loading Farcaster Context...
           </h3>
           <p className="text-[var(--app-foreground-muted)] mb-6">
-            Sign in to view your top 10 casts, or try demo mode
+            Attempting to get your FID from Base App context. If not available, you can try demo mode or enter a custom FID.
           </p>
           
           <div className="space-y-4">
             {!showManualInput ? (
               <>
                 <Button
-                  onClick={handleSignIn}
-                  variant="primary"
-                  className="w-full"
-                  disabled={authLoading}
-                >
-                  {authLoading ? 'Signing In...' : 'Sign In with Farcaster'}
-                </Button>
-                <Button
                   onClick={handleDemoMode}
-                  variant="outline"
+                  variant="primary"
                   className="w-full"
                 >
                   Try Demo Mode (FID: 123456)
                 </Button>
                 <Button
                   onClick={() => setShowManualInput(true)}
-                  variant="ghost"
+                  variant="outline"
                   className="w-full"
                 >
                   Enter Custom FID
