@@ -13,6 +13,9 @@ import {
 } from '@coinbase/onchainkit/swap';
 import type { Token } from '@coinbase/onchainkit/token';
 
+// Mock wallet address for demo - in real app, this would come from Farcaster wallet
+const DEMO_WALLET_ADDRESS = "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6";
+
 interface SwapDisplayProps {
   className?: string;
 }
@@ -22,70 +25,36 @@ export function SwapDisplay({ className = "" }: SwapDisplayProps) {
   const [userAddress, setUserAddress] = useState<string | null>(null);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
 
-  // Get user's wallet address from Base App context
+  // Get user info from Farcaster context and set up wallet
   useEffect(() => {
-    console.log('=== WALLET CONTEXT DEBUG ===');
+    console.log('=== FARCASTER CONTEXT DEBUG ===');
     console.log('Full context object:', context);
     
     if (context) {
-      console.log('Context exists, checking for wallet info...');
+      console.log('Context exists, checking for Farcaster user info...');
       console.log('Context keys:', Object.keys(context));
       
       // Check if we have user info directly in context
       if (context.user) {
-        console.log('✅ User info found in context.user:', context.user);
+        console.log('✅ Farcaster user info found in context.user:', context.user);
         console.log('User keys:', Object.keys(context.user));
+        
+        // For now, use demo wallet address since we're in Base App
+        // In a real Farcaster mini app, you'd use sdk.wallet.getAddress()
+        setUserAddress(DEMO_WALLET_ADDRESS);
+        setIsWalletConnected(true);
+        console.log('✅ Using demo wallet address for Base App:', DEMO_WALLET_ADDRESS);
       }
       
       if (context.client) {
         console.log('Client exists, full client object:', context.client);
         console.log('Client keys:', Object.keys(context.client));
-        
-        // Look for wallet address in various possible locations
-        const clientContext = context.client as Record<string, unknown>;
-        const contextKeys = Object.keys(clientContext);
-        console.log('Available client context keys:', contextKeys);
-        
-        // Log all client properties in detail
-        for (const key of contextKeys) {
-          const value = clientContext[key];
-          console.log(`Client.${key}:`, value);
-          console.log(`Client.${key} type:`, typeof value);
-          if (value && typeof value === 'object') {
-            console.log(`Client.${key} keys:`, Object.keys(value as Record<string, unknown>));
-          }
-        }
-        
-        // Look for wallet address in various possible locations
-        if (typeof clientContext.address === 'string') {
-          setUserAddress(clientContext.address);
-          setIsWalletConnected(true);
-          console.log('✅ Wallet address found in context.client.address:', clientContext.address);
-        } else if (clientContext.user && typeof clientContext.user === 'object' && clientContext.user !== null && 'address' in clientContext.user && typeof (clientContext.user as Record<string, unknown>).address === 'string') {
-          setUserAddress((clientContext.user as Record<string, unknown>).address as string);
-          setIsWalletConnected(true);
-          console.log('✅ Wallet address found in context.client.user.address:', (clientContext.user as Record<string, unknown>).address);
-        } else {
-          console.log('🔍 No wallet address found in direct properties, searching nested objects...');
-          // Try to find wallet address in other context properties
-          for (const key of contextKeys) {
-            const value = clientContext[key];
-            if (value && typeof value === 'object' && value !== null && 'address' in value && typeof (value as Record<string, unknown>).address === 'string') {
-              setUserAddress((value as Record<string, unknown>).address as string);
-              setIsWalletConnected(true);
-              console.log(`✅ Wallet address found in context.client.${key}.address:`, (value as Record<string, unknown>).address);
-              break;
-            }
-          }
-        }
-      } else {
-        console.log('❌ No client in context');
       }
     } else {
       console.log('❌ No context available');
     }
     
-    console.log('=== END WALLET CONTEXT DEBUG ===');
+    console.log('=== END FARCASTER CONTEXT DEBUG ===');
   }, [context]);
 
   // Define Base tokens for swapping
@@ -166,28 +135,40 @@ export function SwapDisplay({ className = "" }: SwapDisplayProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Profile Card */}
-      {userAddress && context?.user && (
+            {/* Profile Card */}
+      {context?.user && (
         <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-[var(--app-primary)] rounded-full flex items-center justify-center">
+                {context.user.pfpUrl ? (
+                  <img 
+                    src={context.user.pfpUrl} 
+                    alt={`${context.user.displayName || context.user.username} profile`}
+                    className="w-16 h-16 rounded-full border-2 border-[var(--app-card-border)]"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-16 h-16 bg-[var(--app-primary)] rounded-full flex items-center justify-center ${context.user.pfpUrl ? 'hidden' : ''}`}>
                   <span className="text-2xl">🔗</span>
                 </div>
               </div>
               <div>
                 <h2 className="text-xl font-bold text-[var(--app-foreground)]">
-                  {context.user.displayName || context.user.username || 'Base User'}
+                  {context.user.displayName || context.user.username || 'Farcaster User'}
                 </h2>
                 <p className="text-[var(--app-foreground-muted)] mb-1">
                   @{context.user.username || 'user'}
                 </p>
                 <div className="flex items-center space-x-4 text-sm text-[var(--app-foreground-muted)]">
-                  <span>📍 Base Network</span>
-                                     <span className="font-mono text-xs bg-[var(--app-gray)] px-2 py-1 rounded">
-                     {userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : 'Not detected'}
-                   </span>
+                  <span>📍 Farcaster Network</span>
+                  <span className="font-mono text-xs bg-[var(--app-gray)] px-2 py-1 rounded">
+                    FID: {context.user.fid}
+                  </span>
                 </div>
               </div>
             </div>
@@ -211,25 +192,34 @@ export function SwapDisplay({ className = "" }: SwapDisplayProps) {
           </p>
         </div>
 
-        {userAddress ? (
-          <Swap>
-            <SwapAmountInput
-              label="Sell"
-              swappableTokens={swappableTokens}
-              token={ETHToken}
-              type="from"
-            />
-            <SwapToggleButton />
-            <SwapAmountInput
-              label="Buy"
-              swappableTokens={swappableTokens}
-              token={USDCToken}
-              type="to"
-            />
-            <SwapButton />
-            <SwapMessage />
-            <SwapToast />
-          </Swap>
+        {isWalletConnected ? (
+          <div className="space-y-4">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <p className="text-blue-500 text-sm">
+                💡 <strong>Demo Mode:</strong> Using demo wallet address for Base App testing. 
+                In a real Farcaster mini app, this would connect to your actual Farcaster wallet.
+              </p>
+            </div>
+            
+            <Swap>
+              <SwapAmountInput
+                label="Sell"
+                swappableTokens={swappableTokens}
+                token={ETHToken}
+                type="from"
+              />
+              <SwapToggleButton />
+              <SwapAmountInput
+                label="Buy"
+                swappableTokens={swappableTokens}
+                token={USDCToken}
+                type="to"
+              />
+              <SwapButton />
+              <SwapMessage />
+              <SwapToast />
+            </Swap>
+          </div>
         ) : (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🔒</div>
