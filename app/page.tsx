@@ -8,7 +8,7 @@ import {
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "./components/DemoComponents";
 import { Icon } from "./components/DemoComponents";
-import { CastDisplay } from "./components/CastDisplay";
+import { SwapDisplay } from "./components/CastDisplay";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -61,14 +61,14 @@ export default function App() {
         <header className="flex justify-between items-center mb-3 h-11">
           <div>
             <h1 className="text-lg font-semibold text-[var(--app-foreground)]">
-              Top Casts Mini App
+              Token Swap Mini App
             </h1>
           </div>
           <div>{saveFrameButton}</div>
         </header>
 
         <main className="flex-1">
-          <CastDisplay />
+          <SwapDisplay />
         </main>
 
         <footer className="mt-2 pt-4 flex justify-center">
