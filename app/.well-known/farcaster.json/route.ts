@@ -12,7 +12,8 @@ function withValidProperties(
 }
 
 export async function GET() {
-  const URL = process.env.NEXT_PUBLIC_URL;
+  const URL = process.env.NEXT_PUBLIC_URL || "https://top-casts-mini-app.vercel.app";
+  const APP_NAME = process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME || "Token Swap Mini App";
 
   return Response.json({
     accountAssociation: {
@@ -22,22 +23,22 @@ export async function GET() {
     },
     frame: withValidProperties({
       version: "1",
-      name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
-      subtitle: process.env.NEXT_PUBLIC_APP_SUBTITLE,
-      description: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
+      name: APP_NAME,
+      subtitle: "Swap tokens on Base",
+      description: "Swap ETH, USDC, and WETH tokens using your connected wallet",
       screenshotUrls: [],
-      iconUrl: process.env.NEXT_PUBLIC_APP_ICON,
-      splashImageUrl: process.env.NEXT_PUBLIC_APP_SPLASH_IMAGE,
-      splashBackgroundColor: process.env.NEXT_PUBLIC_SPLASH_BACKGROUND_COLOR,
+      iconUrl: `${URL}/app-icon.svg`,
+      splashImageUrl: `${URL}/app-hero.svg`,
+      splashBackgroundColor: "#667eea",
       homeUrl: URL,
       webhookUrl: `${URL}/api/webhook`,
-      primaryCategory: process.env.NEXT_PUBLIC_APP_PRIMARY_CATEGORY,
-      tags: [],
-      heroImageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
-      tagline: process.env.NEXT_PUBLIC_APP_TAGLINE,
-      ogTitle: process.env.NEXT_PUBLIC_APP_OG_TITLE,
-      ogDescription: process.env.NEXT_PUBLIC_APP_OG_DESCRIPTION,
-      ogImageUrl: process.env.NEXT_PUBLIC_APP_OG_IMAGE,
+      primaryCategory: "DeFi",
+      tags: ["swap", "tokens", "base", "defi"],
+      heroImageUrl: `${URL}/app-hero.svg`,
+      tagline: "Simple token swapping on Base",
+      ogTitle: APP_NAME,
+      ogDescription: "Swap ETH, USDC, and WETH tokens using your connected wallet",
+      ogImageUrl: `${URL}/app-hero.svg`,
     }),
   });
 }
