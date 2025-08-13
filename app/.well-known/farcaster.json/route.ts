@@ -17,9 +17,9 @@ export async function GET() {
 
   return Response.json({
     accountAssociation: {
-      header: process.env.FARCASTER_HEADER,
-      payload: process.env.FARCASTER_PAYLOAD,
-      signature: process.env.FARCASTER_SIGNATURE,
+      header: "eyJmaWQiOjY3MzAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhCRTE1NjIyNzQ1NkVGY0I1NkZEMDEwMzdGMjNiNWNBNGIxM0QzNkMxIn0",
+      payload: "eyJkb21haW4iOiJ0b3AtY2FzdHMtbWluaS1hcHAudmVyY2VsLmFwcCJ9",
+      signature: "MHhjMzliMzllZTlhMzZhMmQ4ZWEwMzRkZjU2NDAxYTBhOWQ4MTljNGMzOGFiMDU0MWNhYzQ3M2Q3NDk1MjE0MGI1NzAxYmZhOTczOWU3ZGMwYjkzZjA0NDYyZDhjNWMxZTRkMDAzMjBlYTlmMjNiOTAyMjkxZDhkODk5YzFiODlkODFj"
     },
     frame: withValidProperties({
       version: "1",
