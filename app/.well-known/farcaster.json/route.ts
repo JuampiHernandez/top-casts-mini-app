@@ -32,7 +32,7 @@ export async function GET() {
       splashBackgroundColor: "#667eea",
       homeUrl: URL,
       webhookUrl: `${URL}/api/webhook`,
-      primaryCategory: "DeFi",
+      primaryCategory: "finance",
       tags: ["swap", "tokens", "base", "defi"],
       heroImageUrl: `${URL}/app-hero.svg`,
       tagline: "Simple token swapping on Base",
