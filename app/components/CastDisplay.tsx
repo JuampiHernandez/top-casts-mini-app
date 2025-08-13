@@ -51,6 +51,15 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
       console.log('Context exists, checking client...');
       console.log('Context keys:', Object.keys(context));
       
+      // Check if we have user info directly in context
+      if (context.user) {
+        console.log('✅ User info found in context.user:', context.user);
+        console.log('User keys:', Object.keys(context.user));
+        if (context.user.fid) {
+          console.log('✅ FID found directly in context.user.fid:', context.user.fid);
+        }
+      }
+      
       if (context.client) {
         console.log('Client exists, full client object:', context.client);
         console.log('Client keys:', Object.keys(context.client));
@@ -72,7 +81,11 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
         }
         
         // Look for FID in various possible locations
-        if (typeof clientContext.fid === 'number') {
+        // Based on console output, FID is at context.user.fid
+        if (context.user && typeof context.user === 'object' && context.user !== null && 'fid' in context.user && typeof context.user.fid === 'number') {
+          setUserFid(context.user.fid);
+          console.log('✅ FID found in context.user.fid:', context.user.fid);
+        } else if (typeof clientContext.fid === 'number') {
           setUserFid(clientContext.fid);
           console.log('✅ FID found in context.client.fid:', clientContext.fid);
         } else if (clientContext.user && typeof clientContext.user === 'object' && clientContext.user !== null && 'fid' in clientContext.user && typeof (clientContext.user as Record<string, unknown>).fid === 'number') {
