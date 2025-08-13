@@ -125,17 +125,23 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
     setError(null);
     
     try {
-      // Note: In a real app, you'd want to proxy this through your backend
-      // to avoid exposing your API key in the frontend
+      console.log('🔄 Fetching casts for FID:', fid);
       const response = await fetch(`/api/casts?fid=${fid}`);
       
+      console.log('📡 API Response status:', response.status);
+      console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch casts');
+        const errorText = await response.text();
+        console.error('❌ API Error:', response.status, errorText);
+        throw new Error(`Failed to fetch casts: ${response.status} ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('✅ API Response data:', data);
       setCasts(data.casts || []);
     } catch (err) {
+      console.error('❌ Fetch error:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch casts');
     } finally {
       setLoading(false);
@@ -265,6 +271,41 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
 
   return (
     <div className={`space-y-4 ${className}`}>
+      {/* Profile Card */}
+      {userFid && context?.user && (
+        <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] p-6">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Image
+                src={context.user.pfpUrl || "/default-avatar.svg"}
+                alt={`${context.user.displayName || context.user.username} profile`}
+                width={64}
+                height={64}
+                className="rounded-full border-2 border-[var(--app-card-border)]"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/default-avatar.svg";
+                }}
+              />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-[var(--app-foreground)]">
+                {context.user.displayName || context.user.username}
+              </h2>
+              <p className="text-[var(--app-foreground-muted)] mb-2">
+                @{context.user.username}
+              </p>
+              <div className="flex items-center space-x-4 text-sm text-[var(--app-foreground-muted)]">
+                <span>FID: {userFid}</span>
+                {context.user.location?.description && (
+                  <span>📍 {context.user.location.description}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-[var(--app-card-bg)] backdrop-blur-md rounded-xl shadow-lg border border-[var(--app-card-border)] p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium text-[var(--app-foreground)]">

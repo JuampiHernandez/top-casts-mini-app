@@ -52,15 +52,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch popular casts from Neynar API
-    const response = await fetch(
-      `https://api.neynar.com/v2/farcaster/cast/user/popular?fid=${fid}&viewer_fid=${viewerFid}`,
-      {
-        headers: {
-          'api_key': apiKey,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+              const response = await fetch(
+            `https://api.neynar.com/v2/farcaster/feed/user/popular/?fid=${fid}&viewer_fid=${viewerFid}`,
+            {
+              headers: {
+                'x-api-key': apiKey,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
 
     if (!response.ok) {
       const errorText = await response.text();
