@@ -3,6 +3,44 @@ import { NextRequest, NextResponse } from 'next/server';
 interface NeynarCast {
   hash: string;
   author: {
+    object: string;
+    fid: number;
+    username: string;
+    display_name: string;
+    pfp_url: string;
+    custody_address: string;
+    pro?: {
+      status: string;
+      subscribed_at: string;
+      expires_at: string;
+    };
+    profile?: {
+      bio?: {
+        text: string;
+        mentioned_profiles?: Array<{
+          object: string;
+          fid: number;
+          username: string;
+          display_name: string;
+          pfp_url: string;
+        }>;
+      };
+      banner?: {
+        url: string;
+      };
+    };
+    follower_count?: number;
+    following_count?: number;
+    verifications?: string[];
+    verified_addresses?: {
+      eth_addresses: string[];
+      sol_addresses: string[];
+    };
+    power_badge?: boolean;
+    score?: number;
+  };
+  app?: {
+    object: string;
     fid: number;
     username: string;
     display_name: string;
@@ -10,6 +48,10 @@ interface NeynarCast {
   };
   text: string;
   timestamp: string;
+  thread_hash?: string;
+  parent_hash?: string;
+  parent_url?: string;
+  root_parent_url?: string;
   reactions?: {
     likes?: number;
     recasts?: number;
@@ -52,24 +94,42 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch popular casts from Neynar API
-              const response = await fetch(
-            `https://api.neynar.com/v2/farcaster/feed/user/popular/?fid=${fid}&viewer_fid=${viewerFid}`,
-            {
-              headers: {
-                'x-api-key': apiKey,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
+                        const apiUrl = `https://api.neynar.com/v2/farcaster/feed/user/popular/?fid=${fid}&viewer_fid=${viewerFid}`;
+          console.log('🔗 Calling Neynar API:', apiUrl);
+          
+          const response = await fetch(apiUrl, {
+            headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json',
+            },
+          });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Neynar API error:', response.status, errorText);
-      return NextResponse.json(
-        { error: 'Failed to fetch casts from Neynar API' },
-        { status: response.status }
-      );
-    }
+          console.log('📡 Neynar API Response Status:', response.status);
+          console.log('📡 Neynar API Response Headers:', Object.fromEntries(response.headers.entries()));
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Neynar API error:', response.status, errorText);
+            
+            // Try to parse error response
+            let errorMessage = 'Failed to fetch casts from Neynar API';
+            try {
+              const errorData = JSON.parse(errorText);
+              if (errorData.error) {
+                errorMessage = errorData.error;
+              }
+            } catch {
+              // If not JSON, use the raw text
+              if (errorText) {
+                errorMessage = `${errorMessage}: ${errorText}`;
+              }
+            }
+            
+            return NextResponse.json(
+              { error: errorMessage },
+              { status: response.status }
+            );
+          }
 
     const data: NeynarResponse = await response.json();
     

@@ -286,6 +286,7 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
                   const target = e.target as HTMLImageElement;
                   target.src = "/default-avatar.svg";
                 }}
+                unoptimized={true}
               />
             </div>
             <div className="flex-1">
@@ -359,6 +360,7 @@ export function CastDisplay({ className = "" }: CastDisplayProps) {
                     onError={() => {
                       // Fallback is handled by the src prop
                     }}
+                    unoptimized={true}
                   />
                 </div>
                 
